@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+ <mapper namespace="org.framestudy.ssm.usermag.mapper.UserMapper">
+ 	
+ 	<select id="countUserList2PagerByMap" resultType="int">
+ 		select count(id) from t_user 
+ 		<include refid="commonSql"></include>
+ 	</select>
+ 	
+ 	<select id="findUserList2PagerByMap" resultType="UserBean"> 
+ 		select id as id,user_name as userName,login_name as loginName,pwd as password,age as age,create_time as createTime from t_user
+ 		<include refid="commonSql"></include>
+ 		order by create_time desc limit #{params.index},#{params.rows}
+ 	</select>
+ 	
+ 	<sql id="commonSql">
+ 		<where>
+			<if test="params.userName != null">
+				and user_name like CONCAT(#{params.userName},'%')
+			</if> 		
+ 		
+ 			<if test="params.age != null">
+				and age = #{params.age} 			
+ 			</if>
+ 		</where>
+ 	</sql>
+ 	
+ 	<delete id="deleteUserBeanByIds">
+ 		delete from t_user where id in 
+ 		<foreach collection="ids" item="id" separator="," open="(" close=")">
+ 		 #{id}
+ 		</foreach>
+ 	</delete>
+ 
+ 
+ 
+ </mapper>

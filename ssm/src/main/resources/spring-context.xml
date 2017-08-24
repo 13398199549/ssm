@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+	<!-- 开启spring容器自动扫描 -->
+	<context:component-scan base-package="org.framestudy">
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Service" />
+		<context:include-filter type="annotation"
+			expression="org.springframework.stereotype.Repository" />
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<context:property-placeholder location="classpath:mysql.properties"
+		ignore-resource-not-found="true" ignore-unresolvable="true" />
+
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${mysql.driverClassName}"></property>
+		<property name="url" value="${mysql.url}"></property>
+		<property name="username" value="${mysql.username}"></property>
+		<property name="password" value="${mysql.password}"></property>
+		<property name="initialSize" value="15"></property><!-- 初始连接数 -->
+		<property name="maxActive" value="50"></property><!-- 最大连接数 -->
+		<property name="minIdle" value="10"></property><!-- 最小空闲数 -->
+		<property name="maxIdle" value="20"></property><!-- 最大空闲数 -->
+		<property name="removeAbandonedTimeout" value="10"></property><!-- 
+			超时时间10秒 -->
+		<property name="defaultAutoCommit" value="false"></property>
+		<property name="removeAbandoned" value="true"></property><!-- 是否回收超时连接 -->
+		<property name="maxWait" value="1000"></property><!-- 单位毫秒，超时等待时间 -->
+		<!-- 连接被抛弃时是否打印输出到日志中 -->
+		<property name="logAbandoned" value="true" />
+		<!-- 每次空闲连接被回收时，需要检查的连接数量 -->
+		<property name="numTestsPerEvictionRun" value="15" />
+		<!-- 验证查询，获取当前连接数据库的时间 -->
+		<property name="validationQuery" value="SELECT NOW() FROM DUAL"></property>
+	</bean>
+
+	<bean id="sessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 如果有多个包需要同时取类别名， 包与包之间采用,或;间隔 -->
+		<property name="typeAliasesPackage" value="org.framestudy.ssm.beans">
+		</property>
+	</bean>
+
+	<bean id="mapperScanner" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="org.framestudy.ssm.usermag.mapper;"></property>
+		<property name="sqlSessionFactoryBeanName" value="sessionFactory"></property>
+	</bean>
+
+	<!-- 接下来配置事务管理器 -->
+	<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+
+	<!-- spring容器处理事务2种方式：编程式事务管理，声明式事务管理 <tx:annotation-driven transaction-manager="transactionManager"/> 
+		@Transactional() -->
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" read-only="true" />
+			<tx:method name="save*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="add*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="create*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="insert*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+
+			<tx:method name="update*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="modify*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="change*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+
+			<tx:method name="del*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+			<tx:method name="remove*" read-only="false" isolation="DEFAULT"
+				propagation="REQUIRED" rollback-for="java.lang.Exception" />
+		</tx:attributes>
+	</tx:advice>
+
+	<aop:config>
+		<aop:pointcut id="fooServiceOperation"
+			expression="execution(* org.framestudy.ssm.*mag.service.impl.*ServiceImpl.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="fooServiceOperation" />
+	</aop:config>
+
+</beans>        
